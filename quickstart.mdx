@@ -14,7 +14,7 @@ pwgrs
 This generates a password with all character sets (lowercase, uppercase, numbers, and special characters) with enough length to guarantee at least 256 bits of entropy. The password is automatically copied to your clipboard.
 
 <Note>
-  With all character sets enabled (91 distinct characters), the default length is 40 characters to achieve 256 bits of entropy.
+  With all character sets enabled (90 distinct characters), the default length is 40 characters to achieve 256 bits of entropy.
 </Note>
 
 ## Basic usage
@@ -202,7 +202,7 @@ length = ⌈(256 × log(2)) / log(distinct_chars)⌉
 ```
 
 For example:
-- **91 characters** (all sets): 40-character password
+- **90 characters** (all sets): 40-character password
 - **62 characters** (alphanumeric): 43-character password  
 - **52 characters** (mixed case): 45-character password
 - **26 characters** (single case): 55-character password

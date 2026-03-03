@@ -27,7 +27,7 @@ By default, pwgrs generates passwords with intelligent length calculation:
 
 - **Entropy target**: At least 256 bits of entropy
 - **Character sets**: All available character sets (lowercase, uppercase, numbers, special characters)
-- **Calculated length**: With 91 distinct characters available, the default length is 40 characters
+- **Calculated length**: With 90 distinct characters available, the default length is 40 characters
 
 The length is calculated using the formula:
 
@@ -35,11 +35,11 @@ The length is calculated using the formula:
 length = ceil((bits × log(2)) / log(distinct_chars))
 ```
 
-With all character sets enabled, you get 91 distinct characters:
+With all character sets enabled, you get 90 distinct characters:
 - Lowercase letters (a-z): 26 characters
 - Uppercase letters (A-Z): 26 characters
 - Numbers (0-9): 10 characters
-- Special characters: 29 characters (!, \\, #, %, &, (, ), *, +, etc.)
+- Special characters: 28 characters (!, \\, #, %, &, (, ), *, +, etc.)
 
 <Note>
   Fewer character sets selected will result in longer passwords to maintain the same entropy level.
