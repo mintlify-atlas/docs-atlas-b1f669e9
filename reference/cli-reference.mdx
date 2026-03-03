@@ -1,0 +1,231 @@
+---
+title: CLI reference
+description: Complete command-line reference for the pwgrs password generator
+---
+
+The pwgrs CLI is a secure password generator with support for custom character sets and specialized password modes.
+
+## Basic usage
+
+```bash
+pwgrs [OPTIONS]
+pwgrs [SUBCOMMAND] [OPTIONS]
+```
+
+## Global options
+
+<ParamField path="-l, --length" type="number">
+  Length of passwords to generate. If not specified, the length is calculated automatically to achieve at least 256 bits of entropy based on the selected character sets.
+  
+  ```bash
+  pwgrs --length 20
+  pwgrs -l 20
+  ```
+</ParamField>
+
+<ParamField path="-c, --count" type="number" default="1">
+  Amount of passwords to generate. Defaults to 1 if not specified.
+  
+  ```bash
+  pwgrs --count 5
+  pwgrs -c 5
+  ```
+</ParamField>
+
+<ParamField path="-a, --alphabet" type="flag">
+  Include lowercase alphabet characters (a-z) in the character set. If no charset flags are provided, all character sets are used by default.
+  
+  ```bash
+  pwgrs --alphabet
+  pwgrs -a
+  ```
+</ParamField>
+
+<ParamField path="-A, --alphabet-uppercase" type="flag">
+  Include uppercase alphabet characters (A-Z) in the character set. If no charset flags are provided, all character sets are used by default.
+  
+  ```bash
+  pwgrs --alphabet-uppercase
+  pwgrs -A
+  ```
+</ParamField>
+
+<ParamField path="-n, --numbers" type="flag">
+  Include numeric characters (0-9) in the character set. If no charset flags are provided, all character sets are used by default.
+  
+  ```bash
+  pwgrs --numbers
+  pwgrs -n
+  ```
+</ParamField>
+
+<ParamField path="-s, --special" type="flag">
+  Include special characters in the character set: `! \ # % & ( ) * + , - . / : ; < = > ? @ [ ] ^ _ { | } ~`. If no charset flags are provided, all character sets are used by default.
+  
+  ```bash
+  pwgrs --special
+  pwgrs -s
+  ```
+</ParamField>
+
+## Subcommands
+
+### secret
+
+Creates a secret with at least 256 bits of entropy. This mode uses only alphanumeric characters (a-z, A-Z, 0-9) to ensure compatibility with various systems that may not accept special characters.
+
+```bash
+pwgrs secret [OPTIONS]
+```
+
+<ParamField path="-c, --count" type="number" default="1">
+  Amount of secrets to generate.
+  
+  ```bash
+  pwgrs secret --count 3
+  pwgrs secret -c 3
+  ```
+</ParamField>
+
+**Character sets used:** Lowercase alphabet, uppercase alphabet, and numbers
+
+**Entropy:** Minimum 256 bits
+
+#### Examples
+
+<Accordion title="Generate a single secret">
+  ```bash
+  pwgrs secret
+  ```
+  
+  Generates one secret with at least 256 bits of entropy using alphanumeric characters.
+</Accordion>
+
+<Accordion title="Generate multiple secrets">
+  ```bash
+  pwgrs secret --count 5
+  ```
+  
+  Generates five secrets, each with at least 256 bits of entropy.
+</Accordion>
+
+### wifi
+
+Creates a WiFi-friendly password formatted with hyphens for easier manual entry. The password is 16 characters long, formatted as four groups of 4 characters (e.g., `abcd-1234-efgh-5678`).
+
+```bash
+pwgrs wifi [OPTIONS]
+```
+
+<ParamField path="-c, --count" type="number" default="1">
+  Amount of WiFi passwords to generate.
+  
+  ```bash
+  pwgrs wifi --count 2
+  pwgrs wifi -c 2
+  ```
+</ParamField>
+
+**Character sets used:** Lowercase alphabet and numbers
+
+**Entropy:** 128 bits
+
+**Format:** `xxxx-xxxx-xxxx-xxxx`
+
+#### Examples
+
+<Accordion title="Generate a WiFi password">
+  ```bash
+  pwgrs wifi
+  ```
+  
+  Generates a WiFi-friendly password like `a3f7-9k2m-p1q5-x8z4`.
+</Accordion>
+
+<Accordion title="Generate multiple WiFi passwords">
+  ```bash
+  pwgrs wifi --count 3
+  ```
+  
+  Generates three WiFi passwords, each formatted with hyphens.
+</Accordion>
+
+## Character sets
+
+The following character sets are available:
+
+- **Lowercase alphabet (a-z):** 26 characters
+- **Uppercase alphabet (A-Z):** 26 characters
+- **Numbers (0-9):** 10 characters
+- **Special characters:** 28 characters including `!`, `\\`, `#`, `%`, `&`, `(`, `)`, `*`, `+`, `,`, `-`, `.`, `/`, `:`, `;`, `<`, `=`, `>`, `?`, `@`, `[`, `]`, `^`, `_`, `{`, `|`, `}`, `~`
+
+## Default behavior
+
+When no character set flags are specified, pwgrs uses all four character sets (lowercase, uppercase, numbers, and special characters). This provides the maximum entropy per character.
+
+```bash
+pwgrs
+# Equivalent to:
+pwgrs -a -A -n -s
+```
+
+## Entropy calculation
+
+Pwgrs automatically calculates the required password length to achieve at least 256 bits of entropy based on the number of distinct characters in your selected character sets.
+
+The formula used is:
+```
+length = ceiling((bits × log(2)) / log(distinct_chars))
+```
+
+For example, with all character sets enabled (90 distinct characters), a password of 40 characters is required to achieve 256 bits of entropy.
+
+## Usage examples
+
+<Accordion title="Generate a default password">
+  ```bash
+  pwgrs
+  ```
+  
+  Generates one password using all character sets with at least 256 bits of entropy.
+</Accordion>
+
+<Accordion title="Generate a password with specific length">
+  ```bash
+  pwgrs --length 30
+  ```
+  
+  Generates a 30-character password using all character sets.
+</Accordion>
+
+<Accordion title="Generate multiple passwords">
+  ```bash
+  pwgrs --count 10
+  ```
+  
+  Generates 10 passwords, each with at least 256 bits of entropy.
+</Accordion>
+
+<Accordion title="Generate alphanumeric-only passwords">
+  ```bash
+  pwgrs -a -A -n
+  ```
+  
+  Generates a password using only lowercase, uppercase, and numeric characters (no special characters).
+</Accordion>
+
+<Accordion title="Generate numeric-only passwords">
+  ```bash
+  pwgrs --numbers --length 12
+  ```
+  
+  Generates a 12-digit numeric password (similar to a PIN).
+</Accordion>
+
+<Accordion title="Generate passwords with custom character sets">
+  ```bash
+  pwgrs -a -n --length 16 --count 3
+  ```
+  
+  Generates 3 passwords that are 16 characters long using only lowercase letters and numbers.
+</Accordion>

@@ -1,0 +1,93 @@
+---
+title: Introduction
+description: A secure CLI password generator written in Rust with ChaCha20 RNG and 256-bit entropy by default
+---
+
+<Info>
+  **pwgrs** is a cryptographically secure password generator that prioritizes security without sacrificing usability.
+</Info>
+
+## What is pwgrs?
+
+pwgrs is a command-line password generator built with Rust that generates strong, secure passwords using the ChaCha20 random number generator. It automatically calculates the optimal password length to achieve at least 256 bits of entropy based on your selected character sets.
+
+<CardGroup cols={2}>
+  <Card title="Cryptographic security" icon="shield-halved">
+    Uses ChaCha20 RNG seeded from the operating system's cryptographic random source for true randomness
+  </Card>
+  <Card title="256-bit entropy" icon="lock">
+    Automatically calculates password length to ensure at least 256 bits of entropy based on your character set
+  </Card>
+  <Card title="Clipboard integration" icon="clipboard">
+    Single passwords are automatically copied to your clipboard for immediate use
+  </Card>
+  <Card title="Flexible character sets" icon="sliders">
+    Choose from lowercase, uppercase, numbers, and special characters or combine them as needed
+  </Card>
+</CardGroup>
+
+## How it works
+
+pwgrs uses a simple but powerful approach to password generation:
+
+1. **Character set selection**: Choose which types of characters to include (or use all by default)
+2. **Entropy calculation**: Automatically calculates the minimum length needed for 256 bits of entropy
+3. **Secure generation**: Uses ChaCha20 RNG to randomly select characters from your chosen sets
+4. **Instant availability**: Single passwords are copied to clipboard automatically
+
+## Security model
+
+pwgrs is designed with security as the top priority:
+
+- **ChaCha20 RNG**: Uses the ChaCha20 stream cipher in random number generation mode, which is cryptographically secure
+- **OS entropy source**: Seeds the RNG from the operating system's secure random source (`from_os_rng()`)
+- **256-bit minimum**: Ensures all generated passwords meet the minimum recommended entropy for long-term security
+- **No external network calls**: All generation happens locally on your machine
+
+## Use cases
+
+pwgrs is perfect for:
+
+- Generating strong passwords for online accounts
+- Creating secure API keys and tokens
+- Generating WiFi passwords with the built-in `wifi` command
+- Creating secrets for application configuration
+- Batch generating multiple passwords for testing or deployment
+
+## Library usage
+
+pwgrs can also be used as a Rust library in your own projects:
+
+```rust
+use pwgrs::*;
+
+// Create generator options
+let charsets = vec![
+    Charset::new(&CHARSET_ALPHABET),
+    Charset::new(&CHARSET_NUMBERS),
+];
+
+let options = GeneratorOptions {
+    length: 20,
+    charsets,
+};
+
+// Generate a password
+let password = gen_password(&options);
+println!("Generated password: {}", password);
+```
+
+<Note>
+  The library provides full access to the character set configuration, entropy calculation, and password generation functions.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install pwgrs using cargo or build from source
+  </Card>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Generate your first password in seconds
+  </Card>
+</CardGroup>

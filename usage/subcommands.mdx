@@ -1,0 +1,217 @@
+---
+title: Subcommands
+description: Use specialized subcommands for generating secrets and WiFi passwords with optimized character sets and formats
+---
+
+## Overview
+
+pwgrs includes two specialized subcommands for common password generation use cases:
+
+- `secret` - Generates alphanumeric secrets without special characters
+- `wifi` - Creates WiFi-friendly passwords in a formatted pattern
+
+Both subcommands ignore custom charset flags and use predefined character sets optimized for their specific use cases.
+
+## Secret subcommand
+
+The `secret` subcommand generates alphanumeric passwords ideal for API keys, tokens, and other secrets where special characters might cause issues.
+
+### Character sets
+
+The secret subcommand uses only:
+- Lowercase letters (a-z): 26 characters
+- Uppercase letters (A-Z): 26 characters  
+- Numbers (0-9): 10 characters
+
+**Total**: 62 distinct characters
+
+### Default length
+
+With 62 distinct characters, the calculated length for 256-bit entropy is **43 characters**.
+
+### Basic usage
+
+```bash
+pwgrs secret
+```
+
+```bash
+o93Zwf73lNphrq997mt76j0c5M1P7IQnyG86rDCBf98
+```
+
+<Info>
+  Like the base command, generating a single secret automatically copies it to your clipboard.
+</Info>
+
+### Generating multiple secrets
+
+Use the `-c` or `--count` flag to generate multiple secrets:
+
+```bash
+pwgrs secret -c 5
+```
+
+```bash
+o93Zwf73lNphrq997mt76j0c5M1P7IQnyG86rDCBf98
+K2pF9mN7xR4vB8tY1wE5qA3zS6cD0hJaL9bM7nK5j
+aL9bM7nK5jH3gF1dS2aP4oI6uY8tR0eWxCvBnZ8mQ
+5kT3wY7eR9uI1oP4aS6dF8gH2jK0lZ5xC7vB9nM3q
+2nB4vC6xZ8mL0kJ3hG5fD7sA9pO1iU4yT6rE8wQ2e
+```
+
+### Use cases
+
+<Tabs>
+  <Tab title="API keys">
+    Generate secure API keys without special characters:
+
+    ```bash
+    pwgrs secret
+    ```
+
+    Perfect for REST API keys, authentication tokens, and service credentials.
+  </Tab>
+  <Tab title="Database passwords">
+    Create database passwords that don't require escaping:
+
+    ```bash
+    pwgrs secret
+    ```
+
+    Avoids issues with special characters in connection strings.
+  </Tab>
+  <Tab title="Application secrets">
+    Generate secrets for environment variables:
+
+    ```bash
+    pwgrs secret -c 3
+    ```
+
+    Useful for JWT secrets, encryption keys, and session secrets.
+  </Tab>
+</Tabs>
+
+<Note>
+  The `secret` subcommand ignores any charset flags (`-a`, `-A`, `-n`, `-s`) you might pass. It always uses the predefined alphanumeric character set.
+</Note>
+
+## WiFi subcommand
+
+The `wifi` subcommand generates passwords specifically designed for WiFi networks, using a format that's easy to type on mobile devices and displays well on connection screens.
+
+### Character sets
+
+The wifi subcommand uses only:
+- Lowercase letters (a-z): 26 characters
+- Numbers (0-9): 10 characters
+
+**Total**: 36 distinct characters
+
+### Format
+
+WiFi passwords are generated in a hyphen-separated format:
+
+```
+xxxx-xxxx-xxxx-xxxx
+```
+
+This creates a 16-character password (excluding hyphens) with **128 bits of entropy**.
+
+<Info>
+  WiFi passwords use 128-bit entropy instead of 256-bit, which is sufficient for WiFi security standards while remaining easier to type.
+</Info>
+
+### Basic usage
+
+```bash
+pwgrs wifi
+```
+
+```bash
+2fad-03e3-930h-ko1s
+```
+
+### Generating multiple WiFi passwords
+
+Generate several WiFi passwords at once:
+
+```bash
+pwgrs wifi -c 3
+```
+
+```bash
+2fad-03e3-930h-ko1s
+7k9m-2p4t-8w1q-5n3r
+4j2h-9g7f-1d5s-6a8k
+```
+
+### Why WiFi passwords are different
+
+<Tabs>
+  <Tab title="Lower entropy">
+    WiFi passwords use 128-bit entropy instead of 256-bit:
+
+    - **128 bits** is sufficient for WiFi security (WPA2/WPA3)
+    - Creates shorter, more manageable passwords
+    - Still provides strong protection against brute force attacks
+  </Tab>
+  <Tab title="Formatted output">
+    The hyphen-separated format offers several benefits:
+
+    - Easier to read and verify
+    - Simpler to type on mobile devices
+    - Groups of 4 characters reduce typing errors
+    - Displays clearly on router setup screens
+  </Tab>
+  <Tab title="Limited charset">
+    Only lowercase letters and numbers:
+
+    - No ambiguous characters (0 vs O, 1 vs l)
+    - No case sensitivity issues
+    - Compatible with all WiFi devices
+    - Easy to communicate verbally
+  </Tab>
+</Tabs>
+
+<Warning>
+  The `wifi` subcommand ignores any charset flags and length options you might pass. It always generates a 16-character password (plus hyphens) with lowercase letters and numbers only.
+</Warning>
+
+## Comparison table
+
+| Feature | `pwgrs` (default) | `pwgrs secret` | `pwgrs wifi` |
+|---------|-------------------|----------------|---------------|
+| Character sets | All 4 (customizable) | Alphanumeric only | Lowercase + numbers |
+| Distinct chars | 91 (default) | 62 | 36 |
+| Entropy | 256 bits | 256 bits | 128 bits |
+| Default length | 40 chars | 43 chars | 16 chars (formatted) |
+| Format | Plain | Plain | xxxx-xxxx-xxxx-xxxx |
+| Custom charsets | Yes | No | No |
+| Custom length | Yes | No | No |
+| Clipboard copy | Single only | Single only | Single only |
+
+## Examples by scenario
+
+### Secure API token
+
+```bash
+pwgrs secret
+```
+
+Generate a 43-character alphanumeric token with 256-bit entropy.
+
+### Home WiFi password
+
+```bash
+pwgrs wifi
+```
+
+Create an easy-to-type WiFi password with 128-bit entropy.
+
+### Multiple application secrets
+
+```bash
+pwgrs secret -c 10
+```
+
+Generate 10 alphanumeric secrets for different services or environments.

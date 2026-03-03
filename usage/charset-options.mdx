@@ -1,0 +1,172 @@
+---
+title: Character set options
+description: Control password complexity with character set flags and understand how they affect entropy and password length
+---
+
+## Available character sets
+
+pwgrs provides four character set flags that control which types of characters are included in your passwords:
+
+| Flag | Long form | Description | Characters | Count |
+|------|-----------|-------------|------------|-------|
+| `-a` | `--alphabet` | Lowercase letters | a-z | 26 |
+| `-A` | `--alphabet-uppercase` | Uppercase letters | A-Z | 26 |
+| `-n` | `--numbers` | Numbers | 0-9 | 10 |
+| `-s` | `--special` | Special characters | `! \ # % & ( ) * + , - . / : ; < = > ? @ [ ] ^ _ { \| } ~` | 29 |
+
+<Note>
+  When no character set flags are specified, pwgrs uses all four character sets by default.
+</Note>
+
+## How character sets affect password length
+
+When you don't specify a length with `-l`, pwgrs automatically calculates the minimum length needed to achieve at least 256 bits of entropy. Fewer distinct characters means longer passwords:
+
+<Tabs>
+  <Tab title="Only lowercase">
+    ```bash
+    pwgrs -a
+    ```
+
+    ```bash
+    aachgovgbekfrgebxfscruwjgrmzzxsicakzwqtlcrwarpqntkpvydk
+    ```
+
+    **Length**: 55 characters (26 distinct chars available)
+  </Tab>
+  <Tab title="Only uppercase">
+    ```bash
+    pwgrs -A
+    ```
+
+    ```bash
+    YPFNCITWYLOGEEIPLWUWIOUJDTIVJFRTXQSDAORFOGXFUHZFLDYXKZY
+    ```
+
+    **Length**: 55 characters (26 distinct chars available)
+  </Tab>
+  <Tab title="Only numbers">
+    ```bash
+    pwgrs -n
+    ```
+
+    ```bash
+    404033964956362206872986540699097332184979913456121844514705164504017662414846
+    ```
+
+    **Length**: 78 characters (10 distinct chars available)
+  </Tab>
+  <Tab title="Only special">
+    ```bash
+    pwgrs -s
+    ```
+
+    ```bash
+    )<:}=_)=/{@!:/[/[.\])- ^~</<,)>.\,}=^*(&}([&#_,=&^\&|(
+    ```
+
+    **Length**: 54 characters (29 distinct chars available)
+  </Tab>
+</Tabs>
+
+## Combining character sets
+
+You can combine multiple flags to create passwords with specific character types:
+
+### Mixed case letters
+
+```bash
+pwgrs -Aa
+```
+
+```bash
+ugSVnQabbnkKhxdCrhleBCyUnlLqUojUMVTUnJSfMHTTJ
+```
+
+**Length**: 45 characters (52 distinct chars: 26 lowercase + 26 uppercase)
+
+### Alphanumeric passwords
+
+```bash
+pwgrs -Aan
+```
+
+**Length**: 43 characters (62 distinct chars: 26 lowercase + 26 uppercase + 10 numbers)
+
+### Numbers and special characters
+
+```bash
+pwgrs -ns
+```
+
+**Length**: 41 characters (39 distinct chars: 10 numbers + 29 special)
+
+<Info>
+  Combining more character sets reduces the required password length while maintaining 256 bits of entropy.
+</Info>
+
+## Understanding the entropy calculation
+
+The password length is calculated using this formula:
+
+```
+length = ceil((entropy_bits × log(2)) / log(distinct_chars))
+```
+
+For example, to achieve 256 bits of entropy with 62 distinct characters:
+
+```
+length = ceil((256 × log(2)) / log(62))
+length = ceil(256 × 0.693147 / 4.127134)
+length = ceil(42.995)
+length = 43 characters
+```
+
+## Examples by use case
+
+<Tabs>
+  <Tab title="Maximum security">
+    Use all character sets for the shortest password with 256-bit entropy:
+
+    ```bash
+    pwgrs
+    ```
+
+    40 characters with lowercase, uppercase, numbers, and special characters.
+  </Tab>
+  <Tab title="Easy to type">
+    Use only alphanumeric characters to avoid special characters:
+
+    ```bash
+    pwgrs -Aan
+    ```
+
+    43 characters with mixed case letters and numbers.
+  </Tab>
+  <Tab title="Numeric PIN">
+    Generate a secure numeric password:
+
+    ```bash
+    pwgrs -n
+    ```
+
+    78 digits for 256-bit entropy, or use `-l` for shorter PINs:
+
+    ```bash
+    pwgrs -n -l 6
+    ```
+  </Tab>
+  <Tab title="No special chars">
+    Avoid special characters that might cause issues:
+
+    ```bash
+    pwgrs -Aa
+    ```
+
+    45 characters with mixed case letters only.
+  </Tab>
+</Tabs>
+
+<Warning>
+  Using fewer character sets increases the password length required to maintain security. A password with only numbers needs 78 characters to match the entropy of a 40-character password using all character sets.
+</Warning>

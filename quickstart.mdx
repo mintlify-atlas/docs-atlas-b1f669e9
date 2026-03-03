@@ -1,80 +1,266 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick start
+description: Generate secure passwords in seconds with pwgrs
 ---
 
-## Get started in three steps
+## Your first password
 
-Get your documentation site running locally and make your first customization.
+Generating a password with pwgrs is as simple as running the command:
 
-### Step 1: Set up your local environment
+```bash
+pwgrs
+```
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+This generates a password with all character sets (lowercase, uppercase, numbers, and special characters) with enough length to guarantee at least 256 bits of entropy. The password is automatically copied to your clipboard.
+
+<Note>
+  With all character sets enabled (91 distinct characters), the default length is 40 characters to achieve 256 bits of entropy.
+</Note>
+
+## Basic usage
+
+### Generate with specific character sets
+
+Control which types of characters appear in your password:
+
+<CodeGroup>
+```bash Lowercase only
+pwgrs -a
+# Example: aachgovgbekfrgebxfscruwjgrmzzxsicakzwqtlcrwarpqntkpvydk
+# Length: 55 (26 distinct chars)
+```
+
+```bash Uppercase only
+pwgrs -A
+# Example: YPFNCITWYLOGEEIPLWUWIOUJDTIVJFRTXQSDAORFOGXFUHZFLDYXKZY
+# Length: 55 (26 distinct chars)
+```
+
+```bash Mixed case
+pwgrs -Aa
+# Example: ugSVnQabbnkKhxdCrhleBCyUnlLqUojUMVTUnJSfMHTTJ
+# Length: 45 (52 distinct chars)
+```
+
+```bash Numbers only
+pwgrs -n
+# Example: 404033964956362206872986540699097332184979913456121844514705164504017662414846
+# Length: 78 (10 distinct chars)
+```
+
+```bash Special characters
+pwgrs -s
+# Example: )<:}=_)=/{@!:/[/[.\])-^~</<,)>.\,}=^*(&}([&#_,=&^\&|(=
+# Length: 54 (29 distinct chars)
+```
+</CodeGroup>
+
+<Info>
+  The length automatically adjusts based on your selected character sets to maintain 256 bits of entropy. Fewer character types mean longer passwords.
+</Info>
+
+### Set a custom length
+
+Override the automatic length calculation:
+
+```bash
+pwgrs -l 20
+# Example: ?vi_H1tH6_F}1a3.5lnO
+```
+
+<Warning>
+  Setting a custom length may result in less than 256 bits of entropy. Only do this if you understand the security implications.
+</Warning>
+
+### Generate multiple passwords
+
+Create several passwords at once:
+
+```bash
+pwgrs -l 20 -c 5
+```
+
+```
+33gM6q_NY+)QmFu?hSon
+1!sF~127(&Sb[2b)c/J}
+9hi0yjw_bGOF92LIph=0
+#1mMVsk5I7e&sfg>p9U0
+M5WdLId/00!}h=v741mN
+```
+
+<Note>
+  When generating multiple passwords, they are **not** copied to the clipboard automatically.
+</Note>
+
+## Special commands
+
+pwgrs includes specialized subcommands for common use cases:
+
+### Secret generation
+
+Generate secrets suitable for API keys and tokens (uses only alphanumeric characters):
+
+```bash
+pwgrs secret
+# Example: o93Zwf73lNphrq997mt76j0c5M1P7IQnyG86rDCBf98
+```
+
+The `secret` command:
+- Uses lowercase letters, uppercase letters, and numbers (no special characters)
+- Guarantees 256 bits of entropy
+- Automatically copies to clipboard
+
+### WiFi passwords
+
+Generate WiFi-friendly passwords with convenient formatting:
+
+```bash
+pwgrs wifi
+# Example: 2fad-03e3-930h-ko1s
+```
+
+The `wifi` command:
+- Uses only lowercase letters and numbers (no confusing characters)
+- Provides 128 bits of entropy (sufficient for WPA2/WPA3)
+- Formats with hyphens for easy typing
+- Automatically copies to clipboard
+
+Generate multiple WiFi passwords:
+
+```bash
+pwgrs wifi -c 3
+```
+
+## Command reference
+
+Here's a quick reference of all available options:
+
+| Flag | Long form | Description |
+|------|-----------|-------------|
+| `-l` | `--length` | Set password length (overrides automatic calculation) |
+| `-c` | `--count` | Generate multiple passwords |
+| `-a` | `--alphabet` | Include lowercase letters (a-z) |
+| `-A` | `--alphabet-uppercase` | Include uppercase letters (A-Z) |
+| `-n` | `--numbers` | Include numbers (0-9) |
+| `-s` | `--special` | Include special characters (!, @, #, etc.) |
+| `-h` | `--help` | Show help information |
+| `-V` | `--version` | Show version information |
+
+### Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `secret` | Generate alphanumeric secrets with 256-bit entropy |
+| `wifi` | Generate WiFi-friendly passwords with 128-bit entropy |
+
+## Practical examples
+
+<Steps>
+  <Step title="Generate a website password">
+    For a typical website account, use the default settings for maximum security:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```bash
+    pwgrs
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    The password is already in your clipboard—just paste it into the password field.
+  </Step>
+  
+  <Step title="Generate an API key">
+    For API keys that may not support special characters:
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash
+    pwgrs secret
+    ```
+  </Step>
+  
+  <Step title="Generate a memorable WiFi password">
+    For sharing with guests:
+    
+    ```bash
+    pwgrs wifi
+    ```
+    
+    The hyphenated format makes it easy to read aloud or type on mobile devices.
+  </Step>
+  
+  <Step title="Generate passwords for a batch of test accounts">
+    Create 10 passwords for testing:
+    
+    ```bash
+    pwgrs -l 16 -c 10 > test-passwords.txt
+    ```
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Understanding entropy
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+pwgrs automatically calculates the password length needed for 256 bits of entropy using the formula:
 
-### Step 3: Go live
+```
+length = ⌈(256 × log(2)) / log(distinct_chars)⌉
+```
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+For example:
+- **91 characters** (all sets): 40-character password
+- **62 characters** (alphanumeric): 43-character password  
+- **52 characters** (mixed case): 45-character password
+- **26 characters** (single case): 55-character password
+- **10 characters** (numbers only): 78-character password
+
+<Info>
+  256 bits of entropy is considered secure against all known attacks, including quantum computers for the foreseeable future.
+</Info>
+
+## Using as a library
+
+You can integrate pwgrs into your Rust projects:
+
+<Steps>
+  <Step title="Add dependency">
+    Add pwgrs to your `Cargo.toml`:
+    
+    ```toml
+    [dependencies]
+    pwgrs = "1.3.2"
+    ```
+  </Step>
+  
+  <Step title="Import and use">
+    ```rust
+    use pwgrs::*;
+    
+    fn main() {
+        // Use default character sets
+        let charsets = vec![
+            Charset::new(&CHARSET_ALPHABET),
+            Charset::new(&CHARSET_ALPHABET_UPPERCASE),
+            Charset::new(&CHARSET_NUMBERS),
+            Charset::new(&CHARSET_SPECIAL),
+        ];
+        
+        // Calculate length for 256-bit entropy
+        let char_count = count_chars_in_charsets(&charsets);
+        let length = get_length_for_entropy(256, char_count);
+        
+        let options = GeneratorOptions { length, charsets };
+        let password = gen_password(&options);
+        
+        println!("Generated password: {}", password);
+    }
+    ```
+  </Step>
+</Steps>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you know the basics, explore more advanced usage:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="CLI reference" icon="terminal" href="/reference/cli-reference">
+    Complete command-line interface documentation
+  </Card>
+  <Card title="Library API" icon="code" href="/reference/library-api">
+    Use pwgrs as a library in your Rust projects
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

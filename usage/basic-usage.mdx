@@ -1,0 +1,100 @@
+---
+title: Basic usage
+description: Learn how to generate secure passwords with pwgrs, including default behavior, length options, and count settings
+---
+
+## Getting started
+
+The simplest way to use pwgrs is to run the command without any arguments:
+
+```bash
+pwgrs
+```
+
+This generates a single password and automatically copies it to your clipboard. The password is also printed to stdout.
+
+```bash
+3W56|R\8DQz]?qV9Gv@Wi%s!*~d12_*mZ&qTm?Q?
+```
+
+<Info>
+  When generating a single password, pwgrs automatically copies it to your clipboard for convenience.
+</Info>
+
+## Default behavior
+
+By default, pwgrs generates passwords with intelligent length calculation:
+
+- **Entropy target**: At least 256 bits of entropy
+- **Character sets**: All available character sets (lowercase, uppercase, numbers, special characters)
+- **Calculated length**: With 91 distinct characters available, the default length is 40 characters
+
+The length is calculated using the formula:
+
+```
+length = ceil((bits × log(2)) / log(distinct_chars))
+```
+
+With all character sets enabled, you get 91 distinct characters:
+- Lowercase letters (a-z): 26 characters
+- Uppercase letters (A-Z): 26 characters
+- Numbers (0-9): 10 characters
+- Special characters: 29 characters (!, \\, #, %, &, (, ), *, +, etc.)
+
+<Note>
+  Fewer character sets selected will result in longer passwords to maintain the same entropy level.
+</Note>
+
+## Setting password length
+
+You can override the automatic length calculation with the `-l` or `--length` option:
+
+```bash
+pwgrs -l 20
+```
+
+```bash
+?vi_H1tH6_F}1a3.5lnO
+```
+
+This generates a password with exactly 20 characters, regardless of the entropy calculation.
+
+<Warning>
+  Using a custom length may result in passwords with less than 256 bits of entropy if the length is too short for the selected character sets.
+</Warning>
+
+## Generating multiple passwords
+
+Use the `-c` or `--count` option to generate multiple passwords at once:
+
+```bash
+pwgrs -c 5
+```
+
+```bash
+3W56|R\8DQz]?qV9Gv@Wi%s!*~d12_*mZ&qTm?Q?
+K2pF@9mN#7xR$4vB^8tY&1wE*5qA%3zS(6cD)0hJ
+aL9bM7nK5jH3gF1dS2aP4oI6uY8tR0eW#xC@vB$nZ
+```
+
+<Info>
+  When generating multiple passwords, they are not automatically copied to the clipboard. Only single password generation includes clipboard copying.
+</Info>
+
+## Combining length and count
+
+You can combine both options to generate multiple passwords of a specific length:
+
+```bash
+pwgrs -l 20 -c 5
+```
+
+```bash
+33gM6q_NY+)QmFu?hSon
+1!sF~127(&Sb[2b)c/J}
+9hi0yjw_bGOF92LIph=0
+#1mMVsk5I7e&sfg>p9U0
+M5WdLId/00!}h=v741mN
+```
+
+This generates 5 passwords, each exactly 20 characters long.

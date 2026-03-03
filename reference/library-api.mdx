@@ -1,0 +1,459 @@
+---
+title: Library API
+description: Rust library API reference for pwgrs password generation
+---
+
+The pwgrs library provides a programmatic interface for generating secure passwords with customizable character sets and entropy requirements.
+
+## Core functions
+
+### run()
+
+Executes the password generation based on the provided options and returns a list of generated passwords.
+
+```rust
+pub fn run(options: &Options) -> Result<Vec<String>, Box<dyn std::error::Error>>
+```
+
+<ParamField path="options" type="&Options" required>
+  Configuration options containing generator settings and subcommand information.
+</ParamField>
+
+<ResponseField name="Result<Vec<String>, Box<dyn std::error::Error>>">
+  Returns a vector of generated passwords on success, or an error on failure.
+</ResponseField>
+
+#### Behavior
+
+- **Default mode (SubCommand::None):** Generates passwords with the specified character sets and length
+- **Secret mode (SubCommand::Secret):** Generates alphanumeric passwords (a-z, A-Z, 0-9) with 256 bits of entropy
+- **WiFi mode (SubCommand::WiFi):** Generates lowercase alphanumeric passwords formatted as `xxxx-xxxx-xxxx-xxxx` with 128 bits of entropy
+
+#### Example
+
+```rust
+use pwgrs::{run, Options, GeneratorOptions, Charset, SubCommand, CHARSET_ALPHABET};
+
+let options = Options {
+    generator_options: GeneratorOptions {
+        length: 20,
+        charsets: vec![Charset::new(&CHARSET_ALPHABET)],
+    },
+    subcommand: SubCommand::None(5),
+};
+
+let passwords = run(&options).expect("Failed to generate passwords");
+for password in passwords {
+    println!("{}", password);
+}
+```
+
+### gen_password()
+
+Generates a single password based on the provided generator options.
+
+```rust
+pub fn gen_password(options: &GeneratorOptions) -> String
+```
+
+<ParamField path="options" type="&GeneratorOptions" required>
+  Generator configuration containing the password length and character sets to use.
+</ParamField>
+
+<ResponseField name="String">
+  Returns a randomly generated password string.
+</ResponseField>
+
+#### Example
+
+```rust
+use pwgrs::{gen_password, GeneratorOptions, Charset, CHARSET_ALPHABET, CHARSET_NUMBERS};
+
+let options = GeneratorOptions {
+    length: 16,
+    charsets: vec![
+        Charset::new(&CHARSET_ALPHABET),
+        Charset::new(&CHARSET_NUMBERS),
+    ],
+};
+
+let password = gen_password(&options);
+println!("Generated password: {}", password);
+```
+
+### get_length_for_entropy()
+
+Calculates the required password length to achieve a target entropy level with a given character set size.
+
+```rust
+pub fn get_length_for_entropy(bits: u32, distinct_chars: u32) -> u32
+```
+
+<ParamField path="bits" type="u32" required>
+  Target entropy in bits (e.g., 256 for high-security passwords).
+</ParamField>
+
+<ParamField path="distinct_chars" type="u32" required>
+  Number of distinct characters available in the character set.
+</ParamField>
+
+<ResponseField name="u32">
+  Returns the minimum password length required to achieve the target entropy.
+</ResponseField>
+
+#### Formula
+
+```
+length = ceiling((bits × log(2)) / log(distinct_chars))
+```
+
+#### Example
+
+```rust
+use pwgrs::get_length_for_entropy;
+
+// Calculate length needed for 256 bits of entropy with 62 characters (a-z, A-Z, 0-9)
+let length = get_length_for_entropy(256, 62);
+assert_eq!(length, 43);
+
+// Calculate length needed for 128 bits of entropy with 36 characters (a-z, 0-9)
+let length = get_length_for_entropy(128, 36);
+println!("Required length: {}", length); // Prints: 25
+```
+
+### count_chars_in_charsets()
+
+Counts the total number of distinct characters across multiple character sets.
+
+```rust
+pub fn count_chars_in_charsets(charsets: &Vec<Charset>) -> u32
+```
+
+<ParamField path="charsets" type="&Vec<Charset>" required>
+  Vector of character sets to count.
+</ParamField>
+
+<ResponseField name="u32">
+  Returns the total number of characters across all provided character sets.
+</ResponseField>
+
+#### Example
+
+```rust
+use pwgrs::{count_chars_in_charsets, Charset, CHARSET_ALPHABET, CHARSET_NUMBERS};
+
+let charsets = vec![
+    Charset::new(&CHARSET_ALPHABET),     // 26 characters
+    Charset::new(&CHARSET_NUMBERS),      // 10 characters
+];
+
+let total = count_chars_in_charsets(&charsets);
+assert_eq!(total, 36);
+```
+
+## Structs
+
+### Options
+
+Main configuration struct containing all options for password generation.
+
+```rust
+pub struct Options {
+    pub generator_options: GeneratorOptions,
+    pub subcommand: SubCommand,
+}
+```
+
+<ParamField path="generator_options" type="GeneratorOptions" required>
+  Generator configuration including length and character sets.
+</ParamField>
+
+<ParamField path="subcommand" type="SubCommand" required>
+  Subcommand variant specifying the generation mode and count.
+</ParamField>
+
+#### Example
+
+```rust
+use pwgrs::{Options, GeneratorOptions, SubCommand, Charset, CHARSET_ALPHABET};
+
+let options = Options {
+    generator_options: GeneratorOptions {
+        length: 24,
+        charsets: vec![Charset::new(&CHARSET_ALPHABET)],
+    },
+    subcommand: SubCommand::None(1),
+};
+```
+
+### GeneratorOptions
+
+Configuration for password generation parameters.
+
+```rust
+pub struct GeneratorOptions {
+    pub length: u32,
+    pub charsets: Vec<Charset>,
+}
+```
+
+<ParamField path="length" type="u32" required>
+  Length of the password to generate.
+</ParamField>
+
+<ParamField path="charsets" type="Vec<Charset>" required>
+  Vector of character sets to use for password generation.
+</ParamField>
+
+#### Example
+
+```rust
+use pwgrs::{GeneratorOptions, Charset, CHARSET_ALPHABET, CHARSET_NUMBERS, CHARSET_SPECIAL};
+
+let options = GeneratorOptions {
+    length: 32,
+    charsets: vec![
+        Charset::new(&CHARSET_ALPHABET),
+        Charset::new(&CHARSET_NUMBERS),
+        Charset::new(&CHARSET_SPECIAL),
+    ],
+};
+```
+
+### Charset
+
+Represents a character set for password generation.
+
+```rust
+pub struct Charset {
+    pub chars: Vec<char>,
+}
+```
+
+<ParamField path="chars" type="Vec<char>" required>
+  Vector of characters available in this character set.
+</ParamField>
+
+#### Methods
+
+##### new()
+
+Creates a new Charset from a slice of characters.
+
+```rust
+pub fn new(chars: &[char]) -> Charset
+```
+
+<ParamField path="chars" type="&[char]" required>
+  Slice of characters to include in this character set.
+</ParamField>
+
+<ResponseField name="Charset">
+  Returns a new Charset instance.
+</ResponseField>
+
+##### get_rand_char()
+
+Returns a cryptographically secure random character from this character set.
+
+```rust
+pub fn get_rand_char(&self) -> char
+```
+
+<ResponseField name="char">
+  Returns a randomly selected character from the character set.
+</ResponseField>
+
+#### Example
+
+```rust
+use pwgrs::Charset;
+
+let custom_chars = ['a', 'b', 'c', '1', '2', '3'];
+let charset = Charset::new(&custom_chars);
+
+// Get a random character
+let random_char = charset.get_rand_char();
+println!("Random character: {}", random_char);
+```
+
+## Enums
+
+### SubCommand
+
+Specifies the password generation mode and count.
+
+```rust
+pub enum SubCommand {
+    None(u32),
+    Secret(u32),
+    WiFi(u32),
+}
+```
+
+<ParamField path="None" type="u32">
+  Default generation mode. The u32 value specifies the number of passwords to generate.
+</ParamField>
+
+<ParamField path="Secret" type="u32">
+  Secret generation mode (alphanumeric only, 256 bits entropy). The u32 value specifies the number of secrets to generate.
+</ParamField>
+
+<ParamField path="WiFi" type="u32">
+  WiFi-friendly password mode (formatted with hyphens, 128 bits entropy). The u32 value specifies the number of WiFi passwords to generate.
+</ParamField>
+
+#### Example
+
+```rust
+use pwgrs::SubCommand;
+
+// Generate 5 default passwords
+let default_mode = SubCommand::None(5);
+
+// Generate 3 secrets
+let secret_mode = SubCommand::Secret(3);
+
+// Generate 1 WiFi password
+let wifi_mode = SubCommand::WiFi(1);
+```
+
+## Constants
+
+Predefined character sets and configuration constants.
+
+### MINIMUM_ENTROPY_IN_BITS
+
+Minimum entropy requirement for generated passwords.
+
+```rust
+pub const MINIMUM_ENTROPY_IN_BITS: u32 = 256;
+```
+
+### CHARSET_ALPHABET
+
+Lowercase alphabet characters (a-z).
+
+```rust
+pub const CHARSET_ALPHABET: [char; 26] = [
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+];
+```
+
+### CHARSET_ALPHABET_UPPERCASE
+
+Uppercase alphabet characters (A-Z).
+
+```rust
+pub const CHARSET_ALPHABET_UPPERCASE: [char; 26] = [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+];
+```
+
+### CHARSET_NUMBERS
+
+Numeric characters (0-9).
+
+```rust
+pub const CHARSET_NUMBERS: [char; 10] = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+];
+```
+
+### CHARSET_SPECIAL
+
+Special characters for password generation.
+
+```rust
+pub const CHARSET_SPECIAL: [char; 28] = [
+  '!', '\\', '#', '%', '&', '(', ')', '*', '+', ',', '-', '.', '/', 
+  ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '{', '|', '}', '~',
+];
+```
+
+## Complete usage example
+
+Here's a complete example demonstrating the library API:
+
+```rust
+use pwgrs::{
+    run, gen_password, get_length_for_entropy, count_chars_in_charsets,
+    Options, GeneratorOptions, Charset, SubCommand,
+    CHARSET_ALPHABET, CHARSET_ALPHABET_UPPERCASE, CHARSET_NUMBERS, CHARSET_SPECIAL,
+    MINIMUM_ENTROPY_IN_BITS,
+};
+
+fn main() {
+    // Example 1: Generate a single password with all character sets
+    let charsets = vec![
+        Charset::new(&CHARSET_ALPHABET),
+        Charset::new(&CHARSET_ALPHABET_UPPERCASE),
+        Charset::new(&CHARSET_NUMBERS),
+        Charset::new(&CHARSET_SPECIAL),
+    ];
+
+    let char_count = count_chars_in_charsets(&charsets);
+    let length = get_length_for_entropy(MINIMUM_ENTROPY_IN_BITS, char_count);
+
+    let gen_options = GeneratorOptions {
+        length,
+        charsets: charsets.clone(),
+    };
+
+    let password = gen_password(&gen_options);
+    println!("Generated password: {}", password);
+
+    // Example 2: Generate multiple passwords using run()
+    let options = Options {
+        generator_options: gen_options,
+        subcommand: SubCommand::None(5),
+    };
+
+    match run(&options) {
+        Ok(passwords) => {
+            println!("\nGenerated {} passwords:", passwords.len());
+            for (i, pwd) in passwords.iter().enumerate() {
+                println!("{}. {}", i + 1, pwd);
+            }
+        }
+        Err(e) => eprintln!("Error: {}", e),
+    }
+
+    // Example 3: Generate a secret (alphanumeric only)
+    let secret_options = Options {
+        generator_options: GeneratorOptions {
+            length: 43, // Sufficient for 256 bits with 62 chars
+            charsets: vec![
+                Charset::new(&CHARSET_ALPHABET),
+                Charset::new(&CHARSET_ALPHABET_UPPERCASE),
+                Charset::new(&CHARSET_NUMBERS),
+            ],
+        },
+        subcommand: SubCommand::Secret(1),
+    };
+
+    match run(&secret_options) {
+        Ok(secrets) => println!("\nGenerated secret: {}", secrets[0]),
+        Err(e) => eprintln!("Error: {}", e),
+    }
+
+    // Example 4: Generate a WiFi password
+    let wifi_options = Options {
+        generator_options: GeneratorOptions {
+            length: 16,
+            charsets: vec![
+                Charset::new(&CHARSET_ALPHABET),
+                Charset::new(&CHARSET_NUMBERS),
+            ],
+        },
+        subcommand: SubCommand::WiFi(1),
+    };
+
+    match run(&wifi_options) {
+        Ok(passwords) => println!("\nGenerated WiFi password: {}", passwords[0]),
+        Err(e) => eprintln!("Error: {}", e),
+    }
+}
+```

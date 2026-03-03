@@ -1,0 +1,150 @@
+---
+title: Entropy
+description: Understanding password entropy and how pwgrs calculates the required length for secure passwords
+---
+
+## What is entropy?
+
+Entropy measures the randomness and unpredictability of a password. In cryptography, entropy is typically measured in bits, where each bit doubles the number of possible combinations an attacker must try.
+
+For example:
+- 128 bits of entropy = 2^128 possible combinations
+- 256 bits of entropy = 2^256 possible combinations
+
+<Info>
+Higher entropy means a password is harder to crack through brute-force attacks. The entropy depends on both the length of the password and the size of the character set used.
+</Info>
+
+## How pwgrs calculates password length
+
+pwgrs automatically calculates the minimum password length needed to achieve a target entropy based on the character sets you choose. The calculation uses this formula:
+
+```rust
+pub fn get_length_for_entropy(bits: u32, distinct_chars: u32) -> u32 {
+  // (bits * log(2)) / log(distinct_chars)
+  (bits as f64 * 2_f64.ln() / (distinct_chars as f64).ln()).ceil() as u32
+}
+```
+
+This formula is derived from the mathematical relationship:
+
+```
+2^bits = distinct_chars^length
+```
+
+Solving for length:
+
+```
+length = (bits * log(2)) / log(distinct_chars)
+```
+
+The result is rounded up using `ceil()` to ensure the password meets or exceeds the target entropy.
+
+## Default entropy target
+
+By default, pwgrs targets **256 bits of entropy**, which is considered cryptographically strong and resistant to attacks even from quantum computers in the foreseeable future.
+
+```rust
+pub const MINIMUM_ENTROPY_IN_BITS: u32 = 256;
+```
+
+<Note>
+When you use the `secret` subcommand, pwgrs generates passwords with at least 256 bits of entropy regardless of the character sets chosen.
+</Note>
+
+## Examples with different character sets
+
+### All character sets (default)
+
+When using all four character sets (lowercase, uppercase, numbers, special), you have 94 distinct characters:
+- Lowercase (a-z): 26 characters
+- Uppercase (A-Z): 26 characters
+- Numbers (0-9): 10 characters
+- Special characters: 28 characters
+- **Total: 94 characters**
+
+For 256 bits of entropy:
+```
+length = (256 * log(2)) / log(94)
+length ≈ 39.1 → 40 characters
+```
+
+### Alphanumeric only
+
+Using lowercase, uppercase, and numbers gives you 62 distinct characters:
+
+```rust
+#[test]
+fn test_256_bits_with_62_chars() {
+  // To reach 256 bits of entropy with 62 different characters you need a
+  // length of at least 43, as calculated below:
+
+  // 2^256 = 62^x
+  // (256 log(2))/log(62) = x
+  // (256 log(2))/log(62) = ~42.995
+
+  let length = get_length_for_entropy(256, 62);
+  assert_eq!(length, 43);
+}
+```
+
+A password with 62 possible characters requires **43 characters** to reach 256 bits of entropy.
+
+### Lowercase and numbers only
+
+Using only lowercase letters and numbers (like the WiFi mode) gives you 36 distinct characters:
+- Lowercase (a-z): 26 characters
+- Numbers (0-9): 10 characters
+- **Total: 36 characters**
+
+For 256 bits of entropy:
+```
+length = (256 * log(2)) / log(36)
+length ≈ 49.5 → 50 characters
+```
+
+<Warning>
+Fewer character types mean you need a longer password to achieve the same entropy. Using all available character sets results in shorter, stronger passwords.
+</Warning>
+
+## WiFi mode entropy
+
+The `wifi` subcommand uses a lower entropy target of **128 bits** for compatibility with devices that have character limits:
+
+```rust
+SubCommand::WiFi(count) => {
+  let charsets = vec![
+    Charset::new(&CHARSET_ALPHABET),
+    Charset::new(&CHARSET_NUMBERS),
+  ];
+  let options = GeneratorOptions {
+    length: get_length_for_entropy(128, count_chars_in_charsets(&charsets)),
+    charsets,
+  };
+  // ...
+}
+```
+
+With 36 characters and 128 bits:
+```
+length = (128 * log(2)) / log(36)
+length ≈ 24.7 → 25 characters
+```
+
+The WiFi mode generates 16-character passwords (formatted as xxxx-xxxx-xxxx-xxxx) which provides approximately 82 bits of entropy—sufficient for most WiFi security needs.
+
+## Understanding the tradeoff
+
+The relationship between character set size and password length:
+
+| Character Sets | Distinct Chars | Length for 256 bits |
+|---------------|----------------|---------------------|
+| All four (default) | 94 | 40 characters |
+| Alphanumeric | 62 | 43 characters |
+| Lowercase + Numbers | 36 | 50 characters |
+| Lowercase only | 26 | 55 characters |
+| Numbers only | 10 | 78 characters |
+
+<Info>
+You can override the automatic length calculation using the `--length` or `-l` flag, but this may result in passwords with less than 256 bits of entropy.
+</Info>

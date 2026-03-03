@@ -1,0 +1,191 @@
+---
+title: Security
+description: Security principles and cryptographic foundations behind pwgrs password generation
+---
+
+## Cryptographically secure random number generation
+
+pwgrs uses the **ChaCha20** random number generator (RNG) to ensure passwords are generated with cryptographic-grade randomness. ChaCha20 is a stream cipher designed by Daniel J. Bernstein and is widely used in modern cryptographic applications.
+
+### Implementation
+
+Every time pwgrs needs to make a random selection—whether choosing a character set or picking a specific character—it creates a fresh ChaCha20 RNG instance seeded from the operating system's entropy source:
+
+```rust
+use rand::Rng;
+use rand_chacha::*;
+use rand_core::SeedableRng;
+
+fn get_rand_charset(charsets: &Vec<Charset>) -> &Charset {
+  let mut rng = ChaCha20Rng::from_os_rng();
+  let rand_index = rng.random_range(0..charsets.len());
+  &charsets[rand_index]
+}
+```
+
+Character selection within each charset uses the same approach:
+
+```rust
+pub fn get_rand_char(&self) -> char {
+  let mut rng = ChaCha20Rng::from_os_rng();
+  let rand_index = rng.random_range(0..self.chars.len());
+  self.chars[rand_index]
+}
+```
+
+<Info>
+`ChaCha20Rng::from_os_rng()` seeds the random number generator using entropy from your operating system's secure random source (`/dev/urandom` on Linux, `CryptGenRandom` on Windows, etc.).
+</Info>
+
+## Why ChaCha20?
+
+ChaCha20 offers several security advantages:
+
+1. **Cryptographic strength**: Designed specifically for cryptographic applications with no known practical attacks
+2. **Fast performance**: Efficient on both modern and older hardware without requiring special CPU instructions
+3. **Well-studied**: Extensively analyzed by the cryptographic community and used in protocols like TLS 1.3
+4. **Resistant to timing attacks**: Constant-time operations help prevent side-channel attacks
+
+<Note>
+ChaCha20 is also used in the WireGuard VPN protocol and is one of the recommended cipher suites in modern TLS implementations.
+</Note>
+
+## Why 256 bits of entropy?
+
+The default entropy target of **256 bits** is chosen to provide security against both current and future threats:
+
+### Protection against brute-force attacks
+
+A 256-bit password space means an attacker must try up to 2^256 possible combinations. To put this in perspective:
+
+- **2^256 ≈ 1.16 × 10^77** possible passwords
+- If an attacker could test 1 trillion (10^12) passwords per second
+- It would take approximately **3.67 × 10^57 years** to exhaust the keyspace
+- The universe is only about 1.4 × 10^10 years old
+
+### Quantum resistance
+
+Quantum computers using Grover's algorithm can theoretically reduce the effective security of a key by half. A 256-bit key provides:
+
+- **128 bits of security** even against quantum attacks
+- Considered secure well beyond current technological capabilities
+- Future-proof for the foreseeable future
+
+<Warning>
+128 bits of entropy (used in WiFi mode) provides 64 bits of effective security against quantum attacks, which is still considered adequate for most current use cases but may not be sufficient for long-term secrets.
+</Warning>
+
+## Clipboard security considerations
+
+When generating a single password, pwgrs automatically copies it to your clipboard for convenience:
+
+```rust
+if passwords.len() == 1 {
+  let mut clipboard = Clipboard::new().unwrap();
+  clipboard.set_text(passwords[0].clone()).unwrap();
+}
+```
+
+### Security implications
+
+<Warning>
+Passwords in your clipboard can potentially be accessed by other applications running on your system. Be aware of the following risks:
+</Warning>
+
+1. **Clipboard managers**: Some clipboard managers store history indefinitely
+2. **Malicious applications**: Any application with clipboard access can read the password
+3. **Remote access software**: Tools like TeamViewer may sync clipboard contents
+4. **Persistence**: The password remains in clipboard until overwritten
+
+### Best practices
+
+- **Paste immediately**: Use the generated password right away and overwrite your clipboard
+- **Clear clipboard**: Copy something else (like a space character) after using the password
+- **Disable clipboard history**: Configure your clipboard manager to exclude passwords or disable history
+- **Generate multiple passwords**: When using `--count` to generate multiple passwords, pwgrs does not copy to clipboard
+
+```bash
+# Single password - copied to clipboard
+pwgrs
+
+# Multiple passwords - not copied to clipboard
+pwgrs --count 5
+```
+
+<Info>
+If you're concerned about clipboard security, generate multiple passwords with `--count 2` and manually type the one you want to use.
+</Info>
+
+## Character set security
+
+All character sets in pwgrs are defined as constants to ensure consistency and prevent injection attacks:
+
+```rust
+pub const CHARSET_ALPHABET: [char; 26] = [
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+];
+
+pub const CHARSET_ALPHABET_UPPERCASE: [char; 26] = [
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+];
+
+pub const CHARSET_NUMBERS: [char; 10] = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+];
+
+pub const CHARSET_SPECIAL: [char; 28] = [
+  '!', '\\', '#', '%', '&', '(', ')', '*', '+', ',', '-', '.', '/',
+  ':', ';', '<', '=', '>', '?', '@', '[', ']', '^', '_', '{', '|', '}', '~',
+];
+```
+
+### Character selection is uniform
+
+Each character in a charset has an equal probability of being selected, ensuring no bias in password generation:
+
+- Characters are stored in fixed arrays
+- Random index selection uses `random_range(0..length)`
+- No characters are excluded or weighted differently
+
+## Memory safety
+
+As a Rust application, pwgrs benefits from Rust's memory safety guarantees:
+
+- **No buffer overflows**: Array bounds are checked at compile time
+- **No use-after-free**: Ownership system prevents dangling references  
+- **No null pointer dereferences**: Option types make null states explicit
+- **Thread safety**: Type system enforces safe concurrency (though pwgrs is single-threaded)
+
+<Note>
+Rust's safety guarantees mean pwgrs is resistant to entire classes of vulnerabilities common in C/C++ applications, including memory corruption attacks.
+</Note>
+
+## Audit and verification
+
+pwgrs is open source, allowing anyone to:
+
+- Review the source code for security issues
+- Verify the entropy calculations
+- Confirm the RNG implementation
+- Check for backdoors or weaknesses
+
+The core password generation logic is simple and straightforward, making it easy to audit:
+
+```rust
+pub fn gen_password(options: &GeneratorOptions) -> String {
+  let mut password = String::new();
+
+  for _ in 0..options.length {
+    let charset = get_rand_charset(&options.charsets);
+    password.push(charset.get_rand_char());
+  }
+
+  password
+}
+```
+
+<Info>
+The source code is available on GitHub. We welcome security researchers to audit the code and report any findings.
+</Info>
